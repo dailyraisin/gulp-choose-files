@@ -1,5 +1,7 @@
 'use strict';
 
+const PLUGIN_NAME = 'gulp-choose-files';
+var PluginError = require('gulp-util').PluginError;
 var through = require('through2');
 var extend = require('extend-shallow');
 var Prompt = require('prompt-checkbox');
@@ -10,7 +12,25 @@ module.exports = function(options) {
   var paths = [];
   var files = {};
 
-  return through.obj(function(file, enc, next) {
+  return through.obj(function transform (file, enc, next) {
+    //var stream = this;
+
+    if (file.isNull()) {
+      this.emit('error', new PluginError(PLUGIN_NAME, 'Null not supported.'));
+      return next(null, file);
+    }
+
+    if (file.isStream()) {
+      this.emit('error', new PluginError(PLUGIN_NAME, 'Streams not supported!'));
+
+      // or, if you can handle Streams:
+      //file.contents = file.contents.pipe(...
+      //return next(null, file);
+    }
+    else if (file.isBuffer()) {
+      this.emit('info', 'my file path=' + file.path);
+    }
+
     if (opts.skip) {
       next(null, file);
       return;
@@ -20,8 +40,8 @@ module.exports = function(options) {
     paths.push(key);
     files[key] = file;
 
-    next();
-  }, function(next) {
+    return next();
+  }, function flush (next) {
     var stream = this;
 
     if (typeof opts.choices === 'string') {
@@ -41,7 +61,13 @@ module.exports = function(options) {
       return;
     }
 
+    //next(null, file);
+    //paths.forEach(function (filepath) {
+    //  stream.push(filepath);
+    //});
+
     var answers = {};
+
     var prompt = new Prompt({
       name: 'files',
       message: msg,
@@ -51,15 +77,26 @@ module.exports = function(options) {
       choices: paths
     });
 
-    prompt.run(answers)
-      .then(function(answers) {
-        answers.forEach(function(filepath) {
+    prompt.run()
+      .then(function resolution (answers) {
+        //stream.emit('error', new PluginError(PLUGIN_NAME, 'hello choices'));
+
+        answers.forEach(function (filepath) {
           stream.push(files[filepath]);
         });
-        next();
-      })
-      .catch(next);
 
+        //return stream;
+      //}, function rejection (rejection) {
+      //  stream.emit('error', new PluginError(PLUGIN_NAME, rejection));
+        next();
+      //  //return stream;
+      }).catch(function (e) {
+
+        //stream.emit('error', new PluginError(PLUGIN_NAME, e));
+        next();
+
+        //return stream;
+      });
   });
 };
 
