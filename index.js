@@ -1,7 +1,5 @@
 'use strict';
 
-const PLUGIN_NAME = 'gulp-choose-files';
-var PluginError = require('gulp-util').PluginError;
 var through = require('through2');
 var extend = require('extend-shallow');
 var Prompt = require('prompt-checkbox');
@@ -22,7 +20,7 @@ module.exports = function(options) {
     paths.push(key);
     files[key] = file;
 
-    return next();
+    next();
   }, function flush (next) {
     var stream = this;
 
