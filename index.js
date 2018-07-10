@@ -28,7 +28,7 @@ module.exports = function(options) {
       //return next(null, file);
     }
     else if (file.isBuffer()) {
-      this.emit('info', 'my file path=' + file.path);
+      //this.emit('info', 'my file path=' + file.path);
     }
 
     if (opts.skip) {
@@ -67,36 +67,51 @@ module.exports = function(options) {
     //});
 
     var answers = {};
+    //stream.emit('info', 'possible files' + JSON.stringify(files));
 
     var prompt = new Prompt({
       name: 'files',
       message: msg,
       type: 'checkbox',
-      choiceObject: true,
+      //choiceObject: true,
       radio: true,
       choices: paths
     });
 
-    prompt.run()
+    prompt.run(answers)
+      .then(function(answers) {
+
+        answers.forEach(function(filepath) {
+          var myFile = files[filepath.name];
+          //stream.emit('info', 'chosen filepath...' + myFile + JSON.stringify(filepath));
+          if (myFile !== undefined) {
+            stream.push(myFile);
+          }
+        });
+        next();
+      })
+      .catch(next);
+
+
+    /*prompt.run()
       .then(function resolution (answers) {
         //stream.emit('error', new PluginError(PLUGIN_NAME, 'hello choices'));
 
         answers.forEach(function (filepath) {
           stream.push(files[filepath]);
+          stream.emit('info', 'I want to use=' + filepath);
         });
-
-        //return stream;
-      //}, function rejection (rejection) {
-      //  stream.emit('error', new PluginError(PLUGIN_NAME, rejection));
-        next();
+      }, function rejection (rejection) {
+        stream.emit('error', new PluginError(PLUGIN_NAME, rejection));
+        next(rejection);
       //  //return stream;
       }).catch(function (e) {
 
-        //stream.emit('error', new PluginError(PLUGIN_NAME, e));
-        next();
+        stream.emit('error', new PluginError(PLUGIN_NAME, 'catch'));
+        //next();
 
         //return stream;
-      });
+      });*/
   });
 };
 
