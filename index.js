@@ -4,7 +4,7 @@ var through = require('through2');
 var extend = require('extend-shallow');
 var Prompt = require('prompt-checkbox');
 
-module.exports = function(options) {
+module.exports = function (options) {
   var opts = extend({key: 'relative', save: false}, options);
   var msg = opts.message || 'Which files do you want to write?';
   var paths = [];
@@ -30,7 +30,10 @@ module.exports = function(options) {
 
     if (Array.isArray(opts.choices)) {
       opts.choices.forEach(function(filepath) {
-        stream.push(files[filepath]);
+        var myFile = files[filepath.name];
+        if (myFile !== undefined) {
+          stream.push(myFile);
+        }
       });
       next();
       return;
@@ -54,6 +57,7 @@ module.exports = function(options) {
 
     prompt.run(answers)
       .then(function(answers) {
+        stream.emit('answers', answers);
         answers.forEach(function(filepath) {
           var myFile = files[filepath.name];
           if (myFile !== undefined) {
